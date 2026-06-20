@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expedia Payslip Verifier</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root { --primary: #2c3e50; --bg: #f4f7f6; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: var(--bg); color: #333; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 800px; width: 100%; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; font-size: 0.9rem; }
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 600px) { .grid-layout { grid-template-columns: 1fr; } }
+        .section-title { font-size: 1.1rem; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px; color: var(--primary); }
+        .input-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+        label { font-size: 0.9rem; margin-bottom: 5px; font-weight: 500; }
+        .helper-text { font-size: 0.75rem; color: #e74c3c; margin-left: 5px; }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; -moz-appearance: textfield; }
+        input:focus { outline: none; border-color: #3498db; }
+        .action-buttons { margin-top: 30px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        button { padding: 12px 25px; font-size: 1rem; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: background 0.3s; }
+        .btn-calc { background: #3498db; } .btn-calc:hover { background: #2980b9; }
+        .btn-pdf { background: #27ae60; display: none; } .btn-pdf:hover { background: #2ecc71; }
+        .btn-ai { background: #8e44ad; display: none; } .btn-ai:hover { background: #732d91; }
+        
+        #output-slip { display: none; background: white; padding: 40px; border: 1px solid #ccc; border-radius: 5px; width: 100%; max-width: 800px; }
+        .slip-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 20px; margin-bottom: 20px; }
+        .slip-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1rem; }
+        .slip-row.bold { font-weight: bold; border-top: 1px dashed #ccc; padding-top: 10px; margin-top: 10px; }
+        .slip-net { font-size: 1.5rem; font-weight: bold; color: var(--primary); text-align: center; margin-top: 20px; padding: 20px; background: #ecf0f1; border-radius: 5px; }
+        #ai-summary-box { display: none; background: #fdf2e9; padding: 15px; border-left: 4px solid #e67e22; margin-top: 20px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="input-container">
+        <h2>Payslip Verifier</h2>
+        <p class="subtitle">Enter the exact amounts from your Individual Payroll Report.</p>
+
+        <div class="grid-layout">
+            <div>
+                <h3 class="section-title">Earnings</h3>
+                <div class="input-group"><label>Basic Pay</label><input type="number" id="in-basic" placeholder="0.00"></div>
+                <div class="input-group"><label>Night Differential (ND1)</label><input type="number" id="in-nd" placeholder="0.00"></div>
+                <div class="input-group"><label>Allowances (Deminimis)</label><input type="number" id="in-allowance" placeholder="0.00"></div>
+                <h3 class="section-title" style="margin-top: 25px;">Adjustments</h3>
+                <div class="input-group"><label>Total Adjustments <span class="helper-text">(Include '-' if negative)</span></label><input type="number" id="in-adjustment" placeholder="0.00"></div>
+            </div>
+            <div>
+                <h3 class="section-title">Deductions</h3>
+                <div class="input-group"><label>Gov't Contributions (SSS/PHIC/HDMF)</label><input type="number" id="in-gov" placeholder="0.00"></div>
+                <div class="input-group"><label>Withholding Tax</label><input type="number" id="in-tax" placeholder="0.00"></div>
+                <div class="input-group"><label>Time Deductions (Lates/Absences)</label><input type="number" id="in-lates" placeholder="0.00"></div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-calc" onclick="generatePayslip()">Calculate</button>
+            <button class="btn-pdf" id="pdf-btn" onclick="downloadPDF()">Save PDF</button>
+            <button class="btn-ai" id="ai-btn" onclick="generateAISummary()">AI Breakdown</button>
+        </div>
+    </div>
+
+    <div id="output-slip">
+        <div class="slip-header">
+            <h2>Personal Payslip Verification</h2>
+            <p style="margin:0; color:#555;" id="date-generated"></p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+            <div>
+                <h4 style="color: #2ecc71; border-bottom: 1px solid #eee; padding-bottom: 5px;">Earnings & Adjustments</h4>
+                <div class="slip-row"><span>Basic Pay:</span> <span id="out-basic">₱0.00</span></div>
+                <div class="slip-row"><span>Night Diff:</span> <span id="out-nd">₱0.00</span></div>
+                <div class="slip-row"><span>Allowances:</span> <span id="out-allowance">₱0.00</span></div>
+                <div class="slip-row"><span>Adjustments:</span> <span id="out-adjustment">₱0.00</span></div>
+                <div class="slip-row bold"><span>Gross Total:</span> <span id="out-gross">₱0.00</span></div>
+            </div>
+            <div>
+                <h4 style="color: #e74c3c; border-bottom: 1px solid #eee; padding-bottom: 5px;">Deductions</h4>
+                <div class="slip-row"><span>Gov't Contributions:</span> <span id="out-gov">₱0.00</span></div>
+                <div class="slip-row"><span>Withholding Tax:</span> <span id="out-tax">₱0.00</span></div>
+                <div class="slip-row"><span>Time Deductions:</span> <span id="out-lates">₱0.00</span></div>
+                <div class="slip-row bold"><span>Total Deductions:</span> <span id="out-total-deduct">₱0.00</span></div>
+            </div>
+        </div>
+        <div class="slip-net">Net Take-Home Pay: <span id="out-net">₱0.00</span></div>
+        <div id="ai-summary-box"><h4 style="margin-top: 0; color: #d35400;">🤖 AI Breakdown</h4><p id="ai-text" style="margin-bottom:0; font-size: 0.95rem;">Loading...</p></div>
+    </div>
+
+    <script>
+        const formatPHP = (num) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(num);
+        const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
+
+        function generatePayslip() {
+            const basic = getVal('in-basic'), nd = getVal('in-nd'), allowance = getVal('in-allowance'), adjustment = getVal('in-adjustment');
+            const gov = Math.abs(getVal('in-gov')), tax = Math.abs(getVal('in-tax')), lates = Math.abs(getVal('in-lates'));
+            
+            const gross = basic + nd + allowance + adjustment;
+            const deduct = gov + tax + lates;
+            const net = gross - deduct;
+
+            document.getElementById('out-basic').innerText = formatPHP(basic);
+            document.getElementById('out-nd').innerText = formatPHP(nd);
+            document.getElementById('out-allowance').innerText = formatPHP(allowance);
+            document.getElementById('out-adjustment').innerText = formatPHP(adjustment);
+            document.getElementById('out-gross').innerText = formatPHP(gross);
+            document.getElementById('out-gov').innerText = formatPHP(gov);
+            document.getElementById('out-tax').innerText = formatPHP(tax);
+            document.getElementById('out-lates').innerText = formatPHP(lates);
+            document.getElementById('out-total-deduct').innerText = formatPHP(deduct);
+            document.getElementById('out-net').innerText = formatPHP(net);
+            
+            document.getElementById('date-generated').innerText = `Generated: ${new Date().toLocaleDateString('en-PH')}`;
+            document.getElementById('output-slip').style.display = 'block';
+            document.getElementById('pdf-btn').style.display = 'inline-block';
+            document.getElementById('ai-btn').style.display = 'inline-block';
+            document.getElementById('ai-summary-box').style.display = 'none';
+            document.getElementById('output-slip').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function downloadPDF() {
+            html2pdf().set({ margin: 0.5, filename: 'Payslip_Summary.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(document.getElementById('output-slip')).save();
+        }
+
+        async function generateAISummary() {
+            const aiBox = document.getElementById('ai-summary-box');
+            const aiText = document.getElementById('ai-text');
+            aiBox.style.display = 'block';
+            aiText.innerText = "Analyzing your payslip... please wait.";
+
+            const promptText = `Act as an HR payroll assistant. Explain this payslip to an employee in 2-3 short sentences. Gross: ${document.getElementById('out-gross').innerText}, ND: ${document.getElementById('out-nd').innerText}, Adjustments: ${document.getElementById('out-adjustment').innerText}, Deductions: ${document.getElementById('out-total-deduct').innerText}, Net Pay: ${document.getElementById('out-net').innerText}. If adjustments are negative, explain it's likely due to mid-cycle hiring or allowances being prorated.`;
+
+            try {
+                const response = await fetch('/api/summarize/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: promptText })
+                });
+                const data = await response.json();
+                aiText.innerText = data.summary ? data.summary : "Sorry, could not generate a summary.";
+            } catch (error) { aiText.innerText = "Connection error."; }
+        }
+    </script>
+</body>
+</html>
