@@ -3,151 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payroll Pro Verifier</title>
-    <!-- PDF Library -->
+    <title>Kwenta Sweldo</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --blue: #2563eb; --green: #10b981; --purple: #8b5cf6; --text: #1f2937; --border: #e5e7eb; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f9fafb; padding: 20px; color: var(--text); }
-        .container { max-width: 950px; margin: auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 25px; }
-        .settings-bar { display: flex; gap: 15px; background: #f3f4f6; padding: 15px; border-radius: 6px; margin-bottom: 30px; flex-wrap: wrap; }
-        .settings-bar .input-group { flex: 1; min-width: 150px; margin: 0; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-        .section-title { font-size: 1.1rem; font-weight: 700; color: #374151; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
-        .input-group { margin-bottom: 15px; }
-        label { font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.95rem; box-sizing: border-box; }
-        input:focus { outline: none; border-color: var(--blue); }
-        .btn-row { display: flex; gap: 15px; margin-top: 30px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: 600; font-size: 1rem; cursor: pointer; color: white; transition: opacity 0.2s; }
-        button:hover { opacity: 0.9; }
+        /* CSS Variables for Light/Dark Theme */
+        :root {
+            --bg-color: #f3f4f6; --card-bg: #ffffff; --text-main: #1f2937; --text-muted: #6b7280;
+            --border-color: #e5e7eb; --input-bg: #ffffff; --blue: #2563eb; --green: #10b981; 
+            --purple: #8b5cf6; --settings-bg: #f9fafb; --ai-bg: #f5f3ff; --ai-border: #8b5cf6;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #111827; --card-bg: #1f2937; --text-main: #f9fafb; --text-muted: #9ca3af;
+            --border-color: #374151; --input-bg: #374151; --settings-bg: #111827;
+            --ai-bg: #2e1065; --ai-border: #a78bfa;
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-main); padding: 15px; margin: 0; transition: background-color 0.3s, color 0.3s; }
+        
+        .container { max-width: 1000px; margin: auto; background: var(--card-bg); padding: 5%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; }
+        h1 { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 800; margin: 0; color: var(--blue); }
+        
+        .theme-toggle { background: var(--border-color); border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; color: var(--text-main); font-weight: 600; transition: 0.2s; }
+
+        /* Responsive Layout Containers */
+        .flex-row { display: flex; flex-wrap: wrap; gap: 15px; }
+        .flex-col { flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .settings-bar { background: var(--settings-bg); padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid var(--border-color); }
+        .section-title { font-size: 1.1rem; font-weight: 700; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 5px; margin-top: 15px; }
+        
+        .input-group { display: flex; flex-direction: column; width: 100%; }
+        label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 16px; background-color: var(--input-bg); color: var(--text-main); }
+        input:focus, select:focus { outline: none; border-color: var(--blue); }
+
+        .btn-row { margin-top: 30px; }
+        button { flex: 1; min-width: 150px; padding: 15px; border: none; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; color: white; transition: 0.2s; }
+        button:hover { filter: brightness(1.1); }
         .btn-calc { background: var(--blue); } .btn-pdf { background: var(--green); } .btn-ai { background: var(--purple); }
-        #results { margin-top: 30px; padding: 25px; border: 1px solid var(--border); border-radius: 6px; display: none; }
-        .result-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1.1rem; }
-        .net-pay { font-size: 1.6rem; font-weight: 800; color: var(--blue); margin-top: 15px; border-top: 2px dashed var(--border); padding-top: 15px; }
-        #ai-response { margin-top: 20px; padding: 15px; background: #f5f3ff; border-left: 4px solid var(--purple); border-radius: 4px; font-size: 0.95rem; line-height: 1.5; color: #4c1d95; }
+        
+        /* Results Section */
+        #results { margin-top: 30px; padding: 25px; border: 1px solid var(--border-color); border-radius: 8px; display: none; background: var(--settings-bg); }
+        .result-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: clamp(1rem, 2.5vw, 1.1rem); }
+        .net-pay { font-size: clamp(1.4rem, 4vw, 1.8rem); font-weight: 900; color: var(--blue); margin-top: 20px; border-top: 2px dashed var(--border-color); padding-top: 20px; }
+        
+        #ai-response { margin-top: 25px; padding: 20px; background: var(--ai-bg); border-left: 5px solid var(--ai-border); border-radius: 6px; font-size: clamp(0.9rem, 2vw, 1rem); line-height: 1.6; display: none; }
+        .ai-step { margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container" id="printable">
-    <h1>Payroll Pro Verifier</h1>
-    
-    <!-- Settings Bar -->
-    <div class="settings-bar">
-        <div class="input-group">
-            <label>Pay Cycle</label>
-            <select id="in-cycle"><option value="semi">Semi-Monthly</option><option value="monthly">Monthly</option></select>
-        </div>
-        <div class="input-group"><label>Working Days in Cut-off</label><input type="number" id="in-days" value="11"></div>
-        <div class="input-group"><label>Hours per Day</label><input type="number" id="in-hours" value="8"></div>
-        <div class="input-group"><label>Night Diff Hours</label><input type="number" id="in-nd-hours" placeholder="e.g. 5"></div>
-    </div>
-
-    <div class="grid">
-        <!-- Left Column -->
-        <div>
-            <div class="section-title">Earnings & Adjustments</div>
-            <div class="input-group"><label>Basic Pay (Cut-off)</label><input type="number" id="in-basic" placeholder="7500.00"></div>
-            <div class="input-group"><label>Night Diff Amount (Auto 20%)</label><input type="number" id="in-nd-amount" readonly style="background:#f3f4f6;"></div>
-            <div class="input-group"><label>Deminimis</label><input type="number" id="in-deminimis" placeholder="1000.00"></div>
-            <div class="input-group"><label>Deminimis Adjustment</label><input type="number" id="in-demi-adj" placeholder="-643.68"></div>
-            <div class="input-group"><label>Salary Adjustment</label><input type="number" id="in-sal-adj" placeholder="-4827.62"></div>
+<div id="pdf-wrapper">
+    <div class="container">
+        <div class="header">
+            <h1>Kwenta Sweldo</h1>
+            <button class="theme-toggle" onclick="toggleTheme()" data-html2canvas-ignore>🌓 Theme</button>
         </div>
         
-        <!-- Right Column -->
-        <div>
-            <div class="section-title">Deductions</div>
-            <div class="input-group"><label>SSS Premium</label><input type="number" id="in-sss" placeholder="250.00"></div>
-            <div class="input-group"><label>PHIC Premium</label><input type="number" id="in-phic" placeholder="375.00"></div>
-            <div class="input-group"><label>HDMF Premium</label><input type="number" id="in-hdmf" placeholder="200.00"></div>
-            <div class="input-group"><label>Withholding Tax</label><input type="number" id="in-tax" placeholder="0.00"></div>
-            <div class="input-group"><label>Other Deductions</label><input type="number" id="in-other" placeholder="0.00"></div>
+        <div class="settings-bar flex-row">
+            <div class="input-group">
+                <label>Pay Cycle</label>
+                <select id="in-cycle"><option value="semi">Semi-Monthly</option><option value="monthly">Monthly</option></select>
+            </div>
+            <div class="input-group"><label>Working Days</label><input type="number" id="in-days"></div>
+            <div class="input-group"><label>Hours per Day</label><input type="number" id="in-hours"></div>
+            <div class="input-group"><label>Night Diff Hours</label><input type="number" id="in-nd-hours"></div>
         </div>
-    </div>
 
-    <!-- Buttons -->
-    <div class="btn-row" data-html2canvas-ignore>
-        <button class="btn-calc" onclick="calculate()">Calculate Net Pay</button>
-        <button class="btn-pdf" onclick="savePDF()">Save PDF</button>
-        <button class="btn-ai" onclick="aiSummary()">AI Summary</button>
-    </div>
+        <div class="flex-row">
+            <div class="flex-col">
+                <div class="section-title">Earnings & Adjustments</div>
+                <div class="input-group"><label>Basic Pay</label><input type="number" id="in-basic"></div>
+                <div class="input-group"><label>Night Diff Amount (Auto)</label><input type="number" id="in-nd-amount" readonly style="opacity: 0.6;"></div>
+                <div class="input-group"><label>Deminimis</label><input type="number" id="in-deminimis"></div>
+                <div class="input-group"><label>Deminimis Adjustment</label><input type="number" id="in-demi-adj"></div>
+                <div class="input-group"><label>Salary Adjustment</label><input type="number" id="in-sal-adj"></div>
+            </div>
+            
+            <div class="flex-col">
+                <div class="section-title">Deductions</div>
+                <div class="input-group"><label>SSS Premium</label><input type="number" id="in-sss"></div>
+                <div class="input-group"><label>PHIC Premium</label><input type="number" id="in-phic"></div>
+                <div class="input-group"><label>HDMF Premium</label><input type="number" id="in-hdmf"></div>
+                <div class="input-group"><label>Withholding Tax</label><input type="number" id="in-tax"></div>
+                <div class="input-group"><label>Other Deductions</label><input type="number" id="in-other"></div>
+            </div>
+        </div>
 
-    <!-- Results Display -->
-    <div id="results">
-        <div class="result-row"><span>Est. Hourly Rate:</span> <span id="out-hourly"></span></div>
-        <div class="result-row"><span>Gross Pay:</span> <span id="out-gross"></span></div>
-        <div class="result-row"><span>Total Deductions:</span> <span id="out-deduct"></span></div>
-        <div class="result-row net-pay"><span>Net Take-Home:</span> <span id="out-net"></span></div>
-        <div id="ai-response" style="display:none;"></div>
+        <div class="btn-row flex-row" data-html2canvas-ignore>
+            <button class="btn-calc" onclick="calculate()">Calculate Net Pay</button>
+            <button class="btn-pdf" onclick="savePDF()">Save Full PDF</button>
+            <button class="btn-ai" onclick="aiSummary()">AI Salary Breakdown</button>
+        </div>
+
+        <div id="results">
+            <div class="result-row"><span>Est. Hourly Rate:</span> <span id="out-hourly"></span></div>
+            <div class="result-row"><span>Gross Pay:</span> <span id="out-gross"></span></div>
+            <div class="result-row"><span>Total Deductions:</span> <span id="out-deduct"></span></div>
+            <div class="result-row net-pay"><span>Net Take-Home:</span> <span id="out-net"></span></div>
+            
+            <div id="ai-response"></div>
+        </div>
     </div>
 </div>
 
 <script>
-    let currentData = {}; // Store data for the AI
+    let currentData = {}; 
+
+    function toggleTheme() {
+        const body = document.documentElement;
+        body.getAttribute("data-theme") === "dark" ? body.removeAttribute("data-theme") : body.setAttribute("data-theme", "dark");
+    }
 
     function calculate() {
         const basic = parseFloat(document.getElementById('in-basic').value) || 0;
         const cycle = document.getElementById('in-cycle').value;
+        const days = parseFloat(document.getElementById('in-days').value) || 11;
         const hoursPerDay = parseFloat(document.getElementById('in-hours').value) || 8;
         const ndHours = parseFloat(document.getElementById('in-nd-hours').value) || 0;
         
-        // --- THE DOLE CALCULATION MAGIC ---
-        // 1. Get Monthly Rate (if semi-monthly, multiply by 2)
         const monthlyBasic = cycle === 'semi' ? basic * 2 : basic;
-        // 2. Standard DOLE formula for daily rate (261 days a year)
         const dailyRate = (monthlyBasic * 12) / 261;
-        // 3. Hourly rate
         const hourlyRate = dailyRate / hoursPerDay;
-        // 4. Night Diff is 20% of hourly rate
-        const ndHourlyRate = hourlyRate * 0.20;
-        const ndAmount = ndHours * ndHourlyRate;
-        
-        // Display ND Amount in the disabled input box
+        const ndAmount = ndHours * (hourlyRate * 0.20);
         document.getElementById('in-nd-amount').value = ndAmount.toFixed(2); 
 
-        // Fetch other inputs
         const demi = parseFloat(document.getElementById('in-deminimis').value) || 0;
         const demiAdj = parseFloat(document.getElementById('in-demi-adj').value) || 0;
         const salAdj = parseFloat(document.getElementById('in-sal-adj').value) || 0;
-        const sss = parseFloat(document.getElementById('in-sss').value) || 0;
-        const phic = parseFloat(document.getElementById('in-phic').value) || 0;
-        const hdmf = parseFloat(document.getElementById('in-hdmf').value) || 0;
-        const tax = parseFloat(document.getElementById('in-tax').value) || 0;
-        const other = parseFloat(document.getElementById('in-other').value) || 0;
+        const deduct = (parseFloat(document.getElementById('in-sss').value) || 0) + 
+                       (parseFloat(document.getElementById('in-phic').value) || 0) + 
+                       (parseFloat(document.getElementById('in-hdmf').value) || 0) + 
+                       (parseFloat(document.getElementById('in-tax').value) || 0) + 
+                       (parseFloat(document.getElementById('in-other').value) || 0);
 
-        // Totals
         const gross = basic + ndAmount + demi + demiAdj + salAdj;
-        const deduct = sss + phic + hdmf + tax + other;
         const net = gross - deduct;
 
-        // Update UI
         document.getElementById('out-hourly').innerText = '₱' + hourlyRate.toFixed(2);
         document.getElementById('out-gross').innerText = '₱' + gross.toFixed(2);
         document.getElementById('out-deduct').innerText = '₱' + deduct.toFixed(2);
         document.getElementById('out-net').innerText = '₱' + net.toFixed(2);
         document.getElementById('results').style.display = 'block';
 
-        // Save context for AI
-        currentData = { basic, hourlyRate, ndHourlyRate, ndHours, ndAmount, net };
+        currentData = { basic, hourlyRate, ndHours, ndAmount, demi, demiAdj, salAdj, deduct, gross, net };
+        document.getElementById('ai-response').style.display = 'none';
     }
 
     function savePDF() { 
-        const element = document.getElementById('printable');
-        html2pdf().set({ margin: 0.5, filename: 'Expedia_Payslip.pdf', image: { type: 'jpeg', quality: 0.98 } }).from(element).save(); 
+        // Generates the PDF from the very top wrapper, capturing everything visible.
+        const element = document.getElementById('pdf-wrapper');
+        const opt = {
+            margin: 0.5,
+            filename: 'Kwenta_Sweldo_Payslip.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save(); 
     }
 
     async function aiSummary() {
         const aiBox = document.getElementById('ai-response');
         aiBox.style.display = 'block';
-        aiBox.innerText = "Analyzing calculation with Gemini AI...";
+        aiBox.innerHTML = "<em>Sending data to AI... please wait up to 10 seconds.</em>";
         
-        const promptText = `Act as an expert payroll specialist. Break down this Night Differential calculation clearly:
-        The employee's calculated hourly rate is ₱${currentData.hourlyRate.toFixed(2)}. 
-        The Night Differential premium is 20% per hour, which equals an extra ₱${currentData.ndHourlyRate.toFixed(2)} per hour.
-        They worked ${currentData.ndHours} ND hours, making the total ND payout ₱${currentData.ndAmount.toFixed(2)}. 
-        Keep the summary under 4 sentences, encouraging, and mention the final Net Pay is ₱${currentData.net.toFixed(2)}.`;
+        // Strict prompt to force a step-by-step breakdown
+        const promptText = `Act as a payroll expert. Give a STEP-BY-STEP breakdown of this salary. Do NOT write a paragraph. Use HTML <div class="ai-step"> tags for each step.
+        Data: Basic ₱${currentData.basic.toFixed(2)}. Hourly ₱${currentData.hourlyRate.toFixed(2)}. ND ₱${currentData.ndAmount.toFixed(2)}. Adjustments ₱${(currentData.demi + currentData.demiAdj + currentData.salAdj).toFixed(2)}. Deductions ₱${currentData.deduct.toFixed(2)}. Final Net ₱${currentData.net.toFixed(2)}.
+        Format exactly like this:
+        <div class="ai-step"><strong>Step 1 (Hourly):</strong> Explain hourly rate.</div>
+        <div class="ai-step"><strong>Step 2 (Night Diff):</strong> Explain ND math.</div>
+        <div class="ai-step"><strong>Step 3 (Gross):</strong> Explain adjustments to reach gross.</div>
+        <div class="ai-step"><strong>Step 4 (Net Pay):</strong> Subtract deductions to reach final net.</div>`;
 
         try {
             const response = await fetch('/api/summarize/', {
@@ -155,10 +187,20 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: promptText })
             });
+            
+            if (!response.ok) {
+                throw new Error(`Server returned status: ${response.status}`);
+            }
+
             const data = await response.json();
-            aiBox.innerText = data.summary;
+            
+            if (data.summary) {
+                aiBox.innerHTML = data.summary;
+            } else {
+                aiBox.innerHTML = `<strong>Backend Error:</strong> ${data.error || "Unknown error occurred."}`;
+            }
         } catch (error) {
-            aiBox.innerText = "Error connecting to AI. Please ensure your Gemini API key is configured properly on Vercel.";
+            aiBox.innerHTML = `<strong>Network/Server Error:</strong> ${error.message}. <br><br><em>Fix: Go to Vercel > Settings > Environment Variables. Make sure GEMINI_API_KEY is saved, then Redeploy your project.</em>`;
         }
     }
 </script>
