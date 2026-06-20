@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kwenta Sweldo</title>
+    <!-- PDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         /* CSS Variables for Light/Dark Theme */
@@ -57,57 +58,60 @@
 </head>
 <body>
 
-<div id="pdf-wrapper">
-    <div class="container">
-        <div class="header">
-            <h1>Kwenta Sweldo</h1>
-            <button class="theme-toggle" onclick="toggleTheme()" data-html2canvas-ignore>🌓 Theme</button>
+<div class="container" id="printable">
+    <div class="header">
+        <h1>Kwenta Sweldo</h1>
+        <button class="theme-toggle" onclick="toggleTheme()" data-html2canvas-ignore>🌓 Theme</button>
+    </div>
+    
+    <!-- Settings Bar -->
+    <div class="settings-bar flex-row">
+        <div class="input-group">
+            <label>Pay Cycle</label>
+            <select id="in-cycle"><option value="semi">Semi-Monthly</option><option value="monthly">Monthly</option></select>
+        </div>
+        <div class="input-group"><label>Working Days</label><input type="number" id="in-days"></div>
+        <div class="input-group"><label>Hours per Day</label><input type="number" id="in-hours"></div>
+        <div class="input-group"><label>Night Diff Hours</label><input type="number" id="in-nd-hours"></div>
+    </div>
+
+    <div class="flex-row">
+        <!-- Earnings Column -->
+        <div class="flex-col">
+            <div class="section-title">Earnings & Adjustments</div>
+            <div class="input-group"><label>Basic Pay</label><input type="number" id="in-basic"></div>
+            <div class="input-group"><label>Night Diff Amount (Auto)</label><input type="number" id="in-nd-amount" readonly style="opacity: 0.6;"></div>
+            <div class="input-group"><label>Deminimis</label><input type="number" id="in-deminimis"></div>
+            <div class="input-group"><label>Deminimis Adjustment</label><input type="number" id="in-demi-adj"></div>
+            <div class="input-group"><label>Salary Adjustment</label><input type="number" id="in-sal-adj"></div>
         </div>
         
-        <div class="settings-bar flex-row">
-            <div class="input-group">
-                <label>Pay Cycle</label>
-                <select id="in-cycle"><option value="semi">Semi-Monthly</option><option value="monthly">Monthly</option></select>
-            </div>
-            <div class="input-group"><label>Working Days</label><input type="number" id="in-days"></div>
-            <div class="input-group"><label>Hours per Day</label><input type="number" id="in-hours"></div>
-            <div class="input-group"><label>Night Diff Hours</label><input type="number" id="in-nd-hours"></div>
+        <!-- Deductions Column -->
+        <div class="flex-col">
+            <div class="section-title">Deductions</div>
+            <div class="input-group"><label>SSS Premium</label><input type="number" id="in-sss"></div>
+            <div class="input-group"><label>PHIC Premium</label><input type="number" id="in-phic"></div>
+            <div class="input-group"><label>HDMF Premium</label><input type="number" id="in-hdmf"></div>
+            <div class="input-group"><label>Withholding Tax</label><input type="number" id="in-tax"></div>
+            <div class="input-group"><label>Other Deductions</label><input type="number" id="in-other"></div>
         </div>
+    </div>
 
-        <div class="flex-row">
-            <div class="flex-col">
-                <div class="section-title">Earnings & Adjustments</div>
-                <div class="input-group"><label>Basic Pay</label><input type="number" id="in-basic"></div>
-                <div class="input-group"><label>Night Diff Amount (Auto)</label><input type="number" id="in-nd-amount" readonly style="opacity: 0.6;"></div>
-                <div class="input-group"><label>Deminimis</label><input type="number" id="in-deminimis"></div>
-                <div class="input-group"><label>Deminimis Adjustment</label><input type="number" id="in-demi-adj"></div>
-                <div class="input-group"><label>Salary Adjustment</label><input type="number" id="in-sal-adj"></div>
-            </div>
-            
-            <div class="flex-col">
-                <div class="section-title">Deductions</div>
-                <div class="input-group"><label>SSS Premium</label><input type="number" id="in-sss"></div>
-                <div class="input-group"><label>PHIC Premium</label><input type="number" id="in-phic"></div>
-                <div class="input-group"><label>HDMF Premium</label><input type="number" id="in-hdmf"></div>
-                <div class="input-group"><label>Withholding Tax</label><input type="number" id="in-tax"></div>
-                <div class="input-group"><label>Other Deductions</label><input type="number" id="in-other"></div>
-            </div>
-        </div>
+    <!-- Buttons -->
+    <div class="btn-row flex-row" data-html2canvas-ignore>
+        <button class="btn-calc" onclick="calculate()">Calculate Net Pay</button>
+        <button class="btn-pdf" onclick="savePDF()">Save Full PDF</button>
+        <button class="btn-ai" onclick="aiSummary()">AI Salary Breakdown</button>
+    </div>
 
-        <div class="btn-row flex-row" data-html2canvas-ignore>
-            <button class="btn-calc" onclick="calculate()">Calculate Net Pay</button>
-            <button class="btn-pdf" onclick="savePDF()">Save Full PDF</button>
-            <button class="btn-ai" onclick="aiSummary()">AI Salary Breakdown</button>
-        </div>
-
-        <div id="results">
-            <div class="result-row"><span>Est. Hourly Rate:</span> <span id="out-hourly"></span></div>
-            <div class="result-row"><span>Gross Pay:</span> <span id="out-gross"></span></div>
-            <div class="result-row"><span>Total Deductions:</span> <span id="out-deduct"></span></div>
-            <div class="result-row net-pay"><span>Net Take-Home:</span> <span id="out-net"></span></div>
-            
-            <div id="ai-response"></div>
-        </div>
+    <!-- Results Display -->
+    <div id="results">
+        <div class="result-row"><span>Est. Hourly Rate:</span> <span id="out-hourly"></span></div>
+        <div class="result-row"><span>Gross Pay:</span> <span id="out-gross"></span></div>
+        <div class="result-row"><span>Total Deductions:</span> <span id="out-deduct"></span></div>
+        <div class="result-row net-pay"><span>Net Take-Home:</span> <span id="out-net"></span></div>
+        
+        <div id="ai-response"></div>
     </div>
 </div>
 
@@ -155,16 +159,25 @@
     }
 
     function savePDF() { 
-        // Generates the PDF from the very top wrapper, capturing everything visible.
-        const element = document.getElementById('pdf-wrapper');
+        // Force light mode so white text doesn't disappear on a white canvas
+        const body = document.documentElement;
+        const isDark = body.getAttribute("data-theme") === "dark";
+        if (isDark) body.removeAttribute("data-theme");
+
+        const element = document.getElementById('printable');
         const opt = {
-            margin: 0.5,
+            margin: 0.3,
             filename: 'Kwenta_Sweldo_Payslip.pdf',
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
+            // Force desktop width (1000px) so the layout stays perfect in the PDF
+            html2canvas: { scale: 2, useCORS: true, windowWidth: 1000 },
             jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
-        html2pdf().set(opt).from(element).save(); 
+
+        // Generate PDF, then switch back to dark mode immediately if it was active
+        html2pdf().set(opt).from(element).save().then(() => {
+            if (isDark) body.setAttribute("data-theme", "dark");
+        });
     }
 
     async function aiSummary() {
@@ -172,7 +185,6 @@
         aiBox.style.display = 'block';
         aiBox.innerHTML = "<em>Sending data to AI... please wait up to 10 seconds.</em>";
         
-        // Strict prompt to force a step-by-step breakdown
         const promptText = `Act as a payroll expert. Give a STEP-BY-STEP breakdown of this salary. Do NOT write a paragraph. Use HTML <div class="ai-step"> tags for each step.
         Data: Basic ₱${currentData.basic.toFixed(2)}. Hourly ₱${currentData.hourlyRate.toFixed(2)}. ND ₱${currentData.ndAmount.toFixed(2)}. Adjustments ₱${(currentData.demi + currentData.demiAdj + currentData.salAdj).toFixed(2)}. Deductions ₱${currentData.deduct.toFixed(2)}. Final Net ₱${currentData.net.toFixed(2)}.
         Format exactly like this:
@@ -188,20 +200,12 @@
                 body: JSON.stringify({ prompt: promptText })
             });
             
-            if (!response.ok) {
-                throw new Error(`Server returned status: ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`Server returned status: ${response.status}`);
             const data = await response.json();
             
-            if (data.summary) {
-                aiBox.innerHTML = data.summary;
-            } else {
-                aiBox.innerHTML = `<strong>Backend Error:</strong> ${data.error || "Unknown error occurred."}`;
-            }
+            aiBox.innerHTML = data.summary ? data.summary : `<strong>Backend Error:</strong> ${data.error || "Unknown error occurred."}`;
         } catch (error) {
-            aiBox.innerHTML = `<strong>Network/Server Error:</strong> ${error.message}. <br><br><em>Fix: Go to Vercel > Settings > Environment Variables. Make sure GEMINI_API_KEY is saved, then Redeploy your project.</em>`;
-        }
+aiBox.innerHTML = `<strong>Network/Server Error:</strong> ${error.message}. <br><br><em>Fix: Go to Render > Environment. Make sure GEMINI_API_KEY is saved.</em>`;        }
     }
 </script>
 </body>
