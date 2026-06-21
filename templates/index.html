@@ -4,89 +4,98 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kwenta Sweldo</title>
-    <!-- PDF Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         /* CSS Variables for Light/Dark Theme */
         :root {
             --bg-color: #f3f4f6; --card-bg: #ffffff; --text-main: #1f2937; --text-muted: #6b7280;
             --border-color: #e5e7eb; --input-bg: #ffffff; --blue: #2563eb; --green: #10b981; 
-            --purple: #8b5cf6; --settings-bg: #f9fafb; --ai-bg: #f5f3ff; --ai-border: #8b5cf6;
+            --settings-bg: #f9fafb;
         }
 
         [data-theme="dark"] {
             --bg-color: #111827; --card-bg: #1f2937; --text-main: #f9fafb; --text-muted: #9ca3af;
             --border-color: #374151; --input-bg: #374151; --settings-bg: #111827;
-            --ai-bg: #2e1065; --ai-border: #a78bfa;
         }
 
         * { box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-main); padding: 15px; margin: 0; transition: background-color 0.3s, color 0.3s; }
         
-        .container { max-width: 1000px; margin: auto; background: var(--card-bg); padding: 5%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 900px; margin: auto; background: var(--card-bg); padding: 40px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; }
+        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid var(--blue); padding-bottom: 15px;}
         h1 { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 800; margin: 0; color: var(--blue); }
         
         .theme-toggle { background: var(--border-color); border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; color: var(--text-main); font-weight: 600; transition: 0.2s; }
 
-        /* Responsive Layout Containers */
+        /* Layout */
         .flex-row { display: flex; flex-wrap: wrap; gap: 15px; }
         .flex-col { flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 15px; }
         
         .settings-bar { background: var(--settings-bg); padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid var(--border-color); }
-        .section-title { font-size: 1.1rem; font-weight: 700; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 5px; margin-top: 15px; }
+        .section-title { font-size: 1.1rem; font-weight: 700; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 5px; margin-top: 15px; text-transform: uppercase; letter-spacing: 0.5px;}
         
         .input-group { display: flex; flex-direction: column; width: 100%; }
         label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
-        input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 16px; background-color: var(--input-bg); color: var(--text-main); }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 16px; background-color: var(--input-bg); color: var(--text-main); }
         input:focus, select:focus { outline: none; border-color: var(--blue); }
 
-        .btn-row { margin-top: 30px; }
-        button { flex: 1; min-width: 150px; padding: 15px; border: none; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; color: white; transition: 0.2s; }
+        .btn-row { margin-top: 30px; display: flex; gap: 15px;}
+        button { flex: 1; padding: 15px; border: none; border-radius: 8px; font-weight: 700; font-size: 1.1rem; cursor: pointer; color: white; transition: 0.2s; }
         button:hover { filter: brightness(1.1); }
-        .btn-calc { background: var(--blue); } .btn-pdf { background: var(--green); } .btn-ai { background: var(--purple); }
+        .btn-calc { background: var(--blue); } .btn-pdf { background: var(--green); }
         
-        /* Results Section */
-        #results { margin-top: 30px; padding: 25px; border: 1px solid var(--border-color); border-radius: 8px; display: none; background: var(--settings-bg); }
-        .result-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: clamp(1rem, 2.5vw, 1.1rem); }
-        .net-pay { font-size: clamp(1.4rem, 4vw, 1.8rem); font-weight: 900; color: var(--blue); margin-top: 20px; border-top: 2px dashed var(--border-color); padding-top: 20px; }
-        
-        #ai-response { margin-top: 25px; padding: 20px; background: var(--ai-bg); border-left: 5px solid var(--ai-border); border-radius: 6px; font-size: clamp(0.9rem, 2vw, 1rem); line-height: 1.6; display: none; }
-        .ai-step { margin-bottom: 10px; }
+        /* Clean Results Statement Box */
+        #results { margin-top: 30px; padding: 30px; border: 2px solid var(--border-color); border-radius: 8px; display: none; background: var(--settings-bg); }
+        .pdf-header { display: none; font-size: 1.6rem; font-weight: 800; color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
+        .result-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 1.1rem; }
+        .net-pay { font-size: 1.8rem; font-weight: 900; color: var(--blue); margin-top: 20px; border-top: 2px dashed var(--border-color); padding-top: 20px; margin-bottom: 25px; }
+
+        /* Breakdown Section Styles */
+        .breakdown-box { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; font-size: 0.95rem; color: var(--text-muted); }
+        .breakdown-box h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .breakdown-line { margin-bottom: 8px; line-height: 1.5; }
+        .breakdown-line strong { color: var(--text-main); }
+
+        /* 🔥 MAGIC PRINT RULES 🔥 */
+        @media print {
+            body * { visibility: hidden; }
+            #results, #results * { visibility: visible; }
+            #results { position: absolute; left: 0; top: 0; width: 100%; border: none; padding: 0; background: white !important; color: black !important; }
+            .pdf-header { display: block; color: black !important; border-bottom-color: black !important;}
+            .result-row, .breakdown-line, .breakdown-box h3 { color: black !important; }
+            .net-pay { color: black !important; border-top-color: black !important;}
+            .breakdown-box { background: white !important; border: 1px solid #ccc !important; page-break-inside: avoid; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container" id="printable">
+<div class="container">
     <div class="header">
         <h1>Kwenta Sweldo</h1>
-        <button class="theme-toggle" onclick="toggleTheme()" data-html2canvas-ignore>🌓 Theme</button>
+        <button class="theme-toggle" onclick="toggleTheme()">🌓 Theme</button>
     </div>
     
-    <!-- Settings Bar -->
     <div class="settings-bar flex-row">
         <div class="input-group">
             <label>Pay Cycle</label>
             <select id="in-cycle"><option value="semi">Semi-Monthly</option><option value="monthly">Monthly</option></select>
         </div>
-        <div class="input-group"><label>Working Days</label><input type="number" id="in-days"></div>
-        <div class="input-group"><label>Hours per Day</label><input type="number" id="in-hours"></div>
-        <div class="input-group"><label>Night Diff Hours</label><input type="number" id="in-nd-hours"></div>
+        <div class="input-group"><label>Working Days</label><input type="number" id="in-days" value="11"></div>
+        <div class="input-group"><label>Hours per Day</label><input type="number" id="in-hours" value="8"></div>
+        <div class="input-group"><label>Night Diff Hours</label><input type="number" id="in-nd-hours" value="0"></div>
     </div>
 
     <div class="flex-row">
-        <!-- Earnings Column -->
         <div class="flex-col">
             <div class="section-title">Earnings & Adjustments</div>
             <div class="input-group"><label>Basic Pay</label><input type="number" id="in-basic"></div>
-            <div class="input-group"><label>Night Diff Amount (Auto)</label><input type="number" id="in-nd-amount" readonly style="opacity: 0.6;"></div>
+            <div class="input-group"><label>Night Diff Amount (Auto)</label><input type="number" id="in-nd-amount" readonly style="opacity: 0.6; pointer-events: none;"></div>
             <div class="input-group"><label>Deminimis</label><input type="number" id="in-deminimis"></div>
             <div class="input-group"><label>Deminimis Adjustment</label><input type="number" id="in-demi-adj"></div>
             <div class="input-group"><label>Salary Adjustment</label><input type="number" id="in-sal-adj"></div>
         </div>
         
-        <!-- Deductions Column -->
         <div class="flex-col">
             <div class="section-title">Deductions</div>
             <div class="input-group"><label>SSS Premium</label><input type="number" id="in-sss"></div>
@@ -97,27 +106,25 @@
         </div>
     </div>
 
-    <!-- Buttons -->
-    <div class="btn-row flex-row" data-html2canvas-ignore>
-        <button class="btn-calc" onclick="calculate()">Calculate Net Pay</button>
-        <button class="btn-pdf" onclick="savePDF()">Save Full PDF</button>
-        <button class="btn-ai" onclick="aiSummary()">AI Salary Breakdown</button>
-    </div>
-
-    <!-- Results Display -->
+    <!-- The Statement Summary Box -->
     <div id="results">
-        <div class="result-row"><span>Est. Hourly Rate:</span> <span id="out-hourly"></span></div>
+        <div class="pdf-header">KWENTA SWELDO PAYSLIP STATEMENT</div>
+        <div class="result-row"><span>Total Night Diff:</span> <span id="out-nd-total"></span></div>
         <div class="result-row"><span>Gross Pay:</span> <span id="out-gross"></span></div>
         <div class="result-row"><span>Total Deductions:</span> <span id="out-deduct"></span></div>
         <div class="result-row net-pay"><span>Net Take-Home:</span> <span id="out-net"></span></div>
         
-        <div id="ai-response"></div>
+        <!-- The Math Breakdown Section -->
+        <div class="breakdown-box" id="math-breakdown"></div>
+    </div>
+
+    <div class="btn-row">
+        <button class="btn-calc" onclick="calculate()">Calculate Net Pay</button>
+        <button class="btn-pdf" onclick="savePDF()">Save / Print PDF</button>
     </div>
 </div>
 
 <script>
-    let currentData = {}; 
-
     function toggleTheme() {
         const body = document.documentElement;
         body.getAttribute("data-theme") === "dark" ? body.removeAttribute("data-theme") : body.setAttribute("data-theme", "dark");
@@ -133,79 +140,57 @@
         const monthlyBasic = cycle === 'semi' ? basic * 2 : basic;
         const dailyRate = (monthlyBasic * 12) / 261;
         const hourlyRate = dailyRate / hoursPerDay;
+        
         const ndAmount = ndHours * (hourlyRate * 0.20);
         document.getElementById('in-nd-amount').value = ndAmount.toFixed(2); 
 
         const demi = parseFloat(document.getElementById('in-deminimis').value) || 0;
         const demiAdj = parseFloat(document.getElementById('in-demi-adj').value) || 0;
         const salAdj = parseFloat(document.getElementById('in-sal-adj').value) || 0;
-        const deduct = (parseFloat(document.getElementById('in-sss').value) || 0) + 
-                       (parseFloat(document.getElementById('in-phic').value) || 0) + 
-                       (parseFloat(document.getElementById('in-hdmf').value) || 0) + 
-                       (parseFloat(document.getElementById('in-tax').value) || 0) + 
-                       (parseFloat(document.getElementById('in-other').value) || 0);
+        
+        const sss = parseFloat(document.getElementById('in-sss').value) || 0;
+        const phic = parseFloat(document.getElementById('in-phic').value) || 0;
+        const hdmf = parseFloat(document.getElementById('in-hdmf').value) || 0;
+        const tax = parseFloat(document.getElementById('in-tax').value) || 0;
+        const other = parseFloat(document.getElementById('in-other').value) || 0;
+        const deduct = sss + phic + hdmf + tax + other;
 
-        const gross = basic + ndAmount + demi + demiAdj + salAdj;
+        const totalAdjustments = demi + demiAdj + salAdj;
+        const gross = basic + ndAmount + totalAdjustments;
         const net = gross - deduct;
 
-        document.getElementById('out-hourly').innerText = '₱' + hourlyRate.toFixed(2);
+        // Display Primary Totals
+        document.getElementById('out-nd-total').innerText = '₱' + ndAmount.toFixed(2);
         document.getElementById('out-gross').innerText = '₱' + gross.toFixed(2);
         document.getElementById('out-deduct').innerText = '₱' + deduct.toFixed(2);
         document.getElementById('out-net').innerText = '₱' + net.toFixed(2);
+        
+        // Build the HTML for the Breakdown Summary
+        let cycleText = cycle === 'semi' ? `(₱${basic.toFixed(2)} * 2)` : `₱${basic.toFixed(2)}`;
+        
+        const breakdownHTML = `
+            <h3>Calculation Breakdown</h3>
+            <div class="breakdown-line"><strong>1. Hourly Rate:</strong> [ ${cycleText} * 12 months ] / 261 days / ${hoursPerDay} hours = <strong>₱${hourlyRate.toFixed(2)} / hr</strong></div>
+            <div class="breakdown-line"><strong>2. Night Diff Total:</strong> ${ndHours} hours * (₱${hourlyRate.toFixed(2)} * 20%) = <strong>₱${ndAmount.toFixed(2)}</strong></div>
+            <div class="breakdown-line"><strong>3. Gross Pay:</strong> Basic (₱${basic.toFixed(2)}) + Night Diff (₱${ndAmount.toFixed(2)}) + Total Allowances/Adj (₱${totalAdjustments.toFixed(2)}) = <strong>₱${gross.toFixed(2)}</strong></div>
+            <div class="breakdown-line"><strong>4. Total Deductions:</strong> SSS (₱${sss.toFixed(2)}) + PHIC (₱${phic.toFixed(2)}) + HDMF (₱${hdmf.toFixed(2)}) + Tax/Other (₱${(tax + other).toFixed(2)}) = <strong>₱${deduct.toFixed(2)}</strong></div>
+            <div class="breakdown-line"><strong>5. Net Take-Home:</strong> Gross Pay (₱${gross.toFixed(2)}) - Deductions (₱${deduct.toFixed(2)}) = <strong>₱${net.toFixed(2)}</strong></div>
+        `;
+        
+        document.getElementById('math-breakdown').innerHTML = breakdownHTML;
         document.getElementById('results').style.display = 'block';
-
-        currentData = { basic, hourlyRate, ndHours, ndAmount, demi, demiAdj, salAdj, deduct, gross, net };
-        document.getElementById('ai-response').style.display = 'none';
     }
 
     function savePDF() { 
-        // Force light mode so white text doesn't disappear on a white canvas
-        const body = document.documentElement;
-        const isDark = body.getAttribute("data-theme") === "dark";
-        if (isDark) body.removeAttribute("data-theme");
-
-        const element = document.getElementById('printable');
-        const opt = {
-            margin: 0.3,
-            filename: 'Kwenta_Sweldo_Payslip.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            // Force desktop width (1000px) so the layout stays perfect in the PDF
-            html2canvas: { scale: 2, useCORS: true, windowWidth: 1000 },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-
-        // Generate PDF, then switch back to dark mode immediately if it was active
-        html2pdf().set(opt).from(element).save().then(() => {
-            if (isDark) body.setAttribute("data-theme", "dark");
-        });
-    }
-
-    async function aiSummary() {
-        const aiBox = document.getElementById('ai-response');
-        aiBox.style.display = 'block';
-        aiBox.innerHTML = "<em>Sending data to AI... please wait up to 10 seconds.</em>";
+        const element = document.getElementById('results');
         
-        const promptText = `Act as a payroll expert. Give a STEP-BY-STEP breakdown of this salary. Do NOT write a paragraph. Use HTML <div class="ai-step"> tags for each step.
-        Data: Basic ₱${currentData.basic.toFixed(2)}. Hourly ₱${currentData.hourlyRate.toFixed(2)}. ND ₱${currentData.ndAmount.toFixed(2)}. Adjustments ₱${(currentData.demi + currentData.demiAdj + currentData.salAdj).toFixed(2)}. Deductions ₱${currentData.deduct.toFixed(2)}. Final Net ₱${currentData.net.toFixed(2)}.
-        Format exactly like this:
-        <div class="ai-step"><strong>Step 1 (Hourly):</strong> Explain hourly rate.</div>
-        <div class="ai-step"><strong>Step 2 (Night Diff):</strong> Explain ND math.</div>
-        <div class="ai-step"><strong>Step 3 (Gross):</strong> Explain adjustments to reach gross.</div>
-        <div class="ai-step"><strong>Step 4 (Net Pay):</strong> Subtract deductions to reach final net.</div>`;
+        if (element.style.display === '' || element.style.display === 'none') {
+            alert("Please click 'Calculate Net Pay' first to generate your breakdown!");
+            return;
+        }
 
-        try {
-            const response = await fetch('/api/summarize/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: promptText })
-            });
-            
-            if (!response.ok) throw new Error(`Server returned status: ${response.status}`);
-            const data = await response.json();
-            
-            aiBox.innerHTML = data.summary ? data.summary : `<strong>Backend Error:</strong> ${data.error || "Unknown error occurred."}`;
-        } catch (error) {
-aiBox.innerHTML = `<strong>Network/Server Error:</strong> ${error.message}. <br><br><em>Fix: Go to Render > Environment. Make sure GEMINI_API_KEY is saved.</em>`;        }
+        // Trigger the browser's native print/save dialog
+        window.print();
     }
 </script>
 </body>
